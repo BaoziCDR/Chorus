@@ -311,6 +311,20 @@ PGlite 在端口 5433 运行嵌入式 PostgreSQL。数据存储在 `.pglite/`，
 | **Plugin 内嵌** | `public/chorus-plugin/skills/chorus/` | Claude Code + Plugin，Session 自动化 |
 | **独立分发** | `public/skill/`（`/skill/` 路径静态托管）| 任何 Agent，手动 Session 管理 |
 
+### OpenSpec 模式（可选旧路线，0.8.0+）
+
+已安装 [OpenSpec](https://github.com/Fission-AI/OpenSpec) CLI 的 PM Agent，可以把 Proposal 按 `proposal.md` + `design.md` + `specs/<capability>/spec.md` 的结构来编写。本地文件作为工作副本，Chorus 的 `documentDrafts` 作为镜像，评审时能看到更稳定的结构，比如 `## ADDED Requirements`、`### Requirement:`、`#### Scenario:`。
+
+这个模式是可选的。没有安装 `openspec` 时，默认行为不变；如需明确关闭，可以设置 `CHORUS_OPENSPEC_MODE=off`。完整说明见 [OPENSPEC_MODE.md](docs/OPENSPEC_MODE.md)。
+
+### Spec Kit 模式（原生导入和生成）
+
+Chorus 可以原生双向处理 Spec Kit 产物。它可以通过 REST 接口或 `chorus_pm_import_speckit_feature` 导入已有的 `specs/<feature>/` 目录，也可以通过 `chorus_pm_generate_speckit_feature` 从 Chorus Proposal 生成 `spec.md`、`plan.md` 和 `tasks.md`。
+
+Chorus 会把 Spec Kit feature 目录记录到 Proposal 来源信息里，并给任务草稿写入 `T001` 这类任务编号。这样后续验收 Spec Kit 任务时，可以回写对应 `tasks.md` 里的 checkbox。
+
+默认情况下，Chorus 会把文件写到当前进程工作目录；如果更想写远端仓库，也可以启用 GitHub adapter。完整说明见 [SPECKIT_MODE.md](docs/SPECKIT_MODE.md)。
+
 ---
 
 ## 文档
@@ -321,6 +335,8 @@ PGlite 在端口 5433 运行嵌入式 PostgreSQL。数据存储在 `.pglite/`，
 | [Architecture](docs/ARCHITECTURE.md) | 技术架构文档 |
 | [MCP Tools](docs/MCP_TOOLS.md) | MCP 工具参考 |
 | [Chorus Plugin](docs/chorus-plugin.md) | 插件设计与 Hook 说明 |
+| [OpenSpec Mode](docs/OPENSPEC_MODE.md) | PM Agent 可选的 OpenSpec 编写模式（0.8.0+） |
+| [Spec Kit Mode](docs/SPECKIT_MODE.md) | 原生 Spec Kit 导入、生成和 checkbox 同步 |
 | [Search](docs/SEARCH.md) | 全局搜索技术设计 |
 | [AI-DLC Gap Analysis](docs/AIDLC_GAP_ANALYSIS.md) | AI-DLC 方法论差距分析 |
 | [AIG Implementation Plan](docs/CHORUS_AIG_PLAN.md) | Agent 透明度路线图 |
