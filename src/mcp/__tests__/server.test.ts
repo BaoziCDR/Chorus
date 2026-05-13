@@ -16,6 +16,8 @@ vi.mock("@/services/activity.service", () => ({}));
 vi.mock("@/services/session.service", () => ({}));
 vi.mock("@/services/idea.service", () => ({}));
 vi.mock("@/services/document.service", () => ({}));
+vi.mock("@/services/spec-kit.service", () => ({}));
+vi.mock("@/services/spec-kit-generate.service", () => ({}));
 vi.mock("@/services/comment.service", () => ({}));
 vi.mock("@/services/assignment.service", () => ({}));
 vi.mock("@/services/notification.service", () => ({}));
@@ -98,6 +100,11 @@ const OLD_PM_TOOLS = [
   "chorus_pm_create_idea",
 ];
 
+const PM_TOOLS_ADDED_AFTER_0_6 = [
+  "chorus_pm_import_speckit_feature",
+  "chorus_pm_generate_speckit_feature",
+];
+
 const OLD_DEVELOPER_TOOLS = [
   "chorus_claim_task",
   "chorus_release_task",
@@ -166,6 +173,12 @@ describe("MCP tool permission wiring", () => {
       }
     });
 
+    it("pm_agent includes the native Spec Kit tools", () => {
+      const registered = registeredFor([...ROLE_PRESETS.pm_agent]);
+      expect(registered.has("chorus_pm_import_speckit_feature")).toBe(true);
+      expect(registered.has("chorus_pm_generate_speckit_feature")).toBe(true);
+    });
+
     it("pm_agent does not see any admin-only tool (proposal:admin / task:admin / *:admin)", () => {
       const registered = registeredFor([...ROLE_PRESETS.pm_agent]);
       for (const adminOnly of [
@@ -190,6 +203,7 @@ describe("MCP tool permission wiring", () => {
       const expected = new Set([
         ...OLD_ADMIN_TOOLS,
         ...OLD_PM_TOOLS,
+        ...PM_TOOLS_ADDED_AFTER_0_6,
         ...OLD_DEVELOPER_TOOLS,
       ]);
       expect(registered).toEqual(expected);
@@ -222,6 +236,8 @@ describe("MCP tool permission wiring", () => {
 
     it("proposal create and all draft tools require proposal:write", () => {
       expect(TOOL_PERMISSIONS.chorus_pm_create_proposal).toBe("proposal:write");
+      expect(TOOL_PERMISSIONS.chorus_pm_import_speckit_feature).toBe("proposal:write");
+      expect(TOOL_PERMISSIONS.chorus_pm_generate_speckit_feature).toBe("proposal:write");
       expect(TOOL_PERMISSIONS.chorus_pm_add_document_draft).toBe("proposal:write");
       expect(TOOL_PERMISSIONS.chorus_pm_add_task_draft).toBe("proposal:write");
       expect(TOOL_PERMISSIONS.chorus_pm_update_document_draft).toBe("proposal:write");

@@ -83,6 +83,11 @@ const mockActivityService = vi.hoisted(() => ({
 }));
 vi.mock("@/services/activity.service", () => mockActivityService);
 
+const mockSpecKitSyncService = vi.hoisted(() => ({
+  scheduleSpecKitTaskCheckboxSync: vi.fn(),
+}));
+vi.mock("@/services/spec-kit-sync.service", () => mockSpecKitSyncService);
+
 // ===== Import under test (after mocks) =====
 
 import {
@@ -1542,6 +1547,19 @@ describe("updateTask", () => {
     await updateTask(TASK_UUID, { status: "done" });
 
     expect(mockPrisma.acceptanceCriterion.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("should schedule Spec Kit checkbox sync when moving to done", async () => {
+    const updated = {
+      ...rawTask({ status: "done" }),
+      project: { uuid: PROJECT_UUID, name: "Test Project" },
+    };
+    mockPrisma.task.findUnique.mockResolvedValue({ status: "to_verify" });
+    mockPrisma.task.update.mockResolvedValue(updated);
+
+    await updateTask(TASK_UUID, { status: "done" });
+
+    expect(mockSpecKitSyncService.scheduleSpecKitTaskCheckboxSync).toHaveBeenCalledWith(COMPANY_UUID, TASK_UUID);
   });
 
   it("should process new mentions when description updated with actor context", async () => {

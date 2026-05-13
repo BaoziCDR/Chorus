@@ -906,8 +906,8 @@ model Task {
 - `companyUuid`: Parent company UUID
 - `projectUuid`: Parent project UUID
 - **Input**:
-  - `inputType`: `idea` | `document`
-  - `inputUuids`: Associated input UUID list (JSON array, supports multiple Ideas combined)
+  - `inputType`: `idea` | `document` | `speckit`
+  - `inputUuids`: Associated input UUID list (JSON array, supports multiple Ideas combined; native adapter inputs such as `speckit` may keep provenance in the Proposal description)
 - **Output**:
   - `outputType`: `document` | `task`
   - `outputData`: Proposed content (Document draft or Task list)
@@ -1025,7 +1025,9 @@ model Task {
 | **Proposals** |
 | GET | /api/projects/:uuid/proposals | Project proposal list | User, PM Agent |
 | POST | /api/projects/:uuid/proposals | Create proposal | PM Agent |
+| POST | /api/projects/:uuid/spec-kit/import | Import Spec Kit artifacts as a proposal | User, PM Agent |
 | GET | /api/proposals/:uuid | Proposal details | User, PM Agent |
+| POST | /api/proposals/:uuid/spec-kit/generate | Generate Spec Kit artifacts from a proposal | User, PM Agent |
 | POST | /api/proposals/:uuid/approve | Approve proposal | User |
 | POST | /api/proposals/:uuid/reject | Reject proposal | User |
 | **Knowledge** |
@@ -1165,7 +1167,7 @@ Gated tools are grouped below by the permission they require. An agent sees a to
 | Required Permission | Representative Tools |
 |-----|-----|
 | `idea:write` | `chorus_claim_idea`, `chorus_release_idea`, `chorus_move_idea`, `chorus_pm_create_idea`, `chorus_pm_start_elaboration`, `chorus_pm_validate_elaboration`, `chorus_pm_skip_elaboration` |
-| `proposal:write` | `chorus_pm_create_proposal`, `chorus_pm_submit_proposal`, `chorus_pm_validate_proposal`, `chorus_pm_{add,update,remove}_document_draft`, `chorus_pm_{add,update,remove}_task_draft`, `chorus_pm_create_tasks`, `chorus_pm_assign_task`, `chorus_{add,remove}_task_dependency`, `chorus_pm_{reject,revoke}_proposal` |
+| `proposal:write` | `chorus_pm_create_proposal`, `chorus_pm_import_speckit_feature`, `chorus_pm_generate_speckit_feature`, `chorus_pm_submit_proposal`, `chorus_pm_validate_proposal`, `chorus_pm_{add,update,remove}_document_draft`, `chorus_pm_{add,update,remove}_task_draft`, `chorus_pm_create_tasks`, `chorus_pm_assign_task`, `chorus_{add,remove}_task_dependency`, `chorus_pm_{reject,revoke}_proposal` |
 | `document:write` | `chorus_pm_create_document`, `chorus_pm_update_document` |
 | `task:write` | `chorus_claim_task`, `chorus_release_task`, `chorus_submit_for_verify`, `chorus_report_work`, `chorus_report_criteria_self_check` |
 | `project:write` | `chorus_admin_create_project`, `chorus_admin_{create,update,delete}_project_group`, `chorus_admin_move_project_to_group` |
@@ -1185,6 +1187,8 @@ The `admin_agent` preset grants all `*:admin` bits and so exposes every tool in 
 | Ideas -> PRD | `idea` | Idea UUIDs (supports multiple) | `document` | PRD draft |
 | PRD -> Tasks | `document` | Document UUID | `task` | Task list |
 | PRD -> Tech Design | `document` | Document UUID | `document` | Tech design draft |
+| Spec Kit -> Proposal | `speckit` | Empty; source path in Proposal description | `document` + `task` drafts | Mirrored docs and task drafts |
+| Proposal -> Spec Kit | `idea` or `document` | Original input UUIDs | Repo files | `spec.md`, `plan.md`, `tasks.md`; source path in Proposal description |
 
 ---
 

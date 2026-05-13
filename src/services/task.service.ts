@@ -9,6 +9,7 @@ import { AlreadyClaimedError, NotClaimedError, isPrismaNotFound } from "@/lib/er
 import { batchCommentCounts } from "@/services/comment.service";
 import * as mentionService from "@/services/mention.service";
 import * as activityService from "@/services/activity.service";
+import { scheduleSpecKitTaskCheckboxSync } from "@/services/spec-kit-sync.service";
 import logger from "@/lib/logger";
 
 // ===== Type Definitions =====
@@ -527,6 +528,8 @@ export async function updateTask(
   data: TaskUpdateParams,
   actorContext?: { actorType: string; actorUuid: string }
 ): Promise<TaskResponse> {
+  let previousStatus: string | null = null;
+
   // If description is being updated and we have actor context, capture old description for mention diffing
   let oldDescription: string | null = null;
   if (data.description !== undefined && actorContext) {
@@ -537,9 +540,10 @@ export async function updateTask(
   // If moving FROM to_verify to any status EXCEPT done, reset acceptance criteria
   // Wrapped in transaction to prevent TOCTOU race condition
   const task = await prisma.$transaction(async (tx) => {
-    if (data.status && data.status !== "done") {
+    if (data.status) {
       const current = await tx.task.findUnique({ where: { uuid }, select: { status: true } });
-      if (current?.status === "to_verify") {
+      previousStatus = current?.status ?? null;
+      if (data.status !== "done" && current?.status === "to_verify") {
         await tx.acceptanceCriterion.updateMany({
           where: { taskUuid: uuid },
           data: {
@@ -568,6 +572,10 @@ export async function updateTask(
   });
 
   eventBus.emitChange({ companyUuid: task.companyUuid, projectUuid: task.project.uuid, entityType: "task", entityUuid: task.uuid, action: "updated" });
+
+  if (data.status === "done" && previousStatus !== "done") {
+    scheduleSpecKitTaskCheckboxSync(task.companyUuid, task.uuid);
+  }
 
   // Process new @mentions in description (append-only: only new mentions)
   if (data.description !== undefined && actorContext && data.description) {

@@ -594,6 +594,21 @@ describe("validateProposal", () => {
     expect(e4!.level).toBe("error");
   });
 
+  it("E4: should allow native Spec Kit proposals without inputUuids", async () => {
+    const proposal = dbProposal({
+      inputType: "speckit",
+      documentDrafts: [validDocDraft()],
+      taskDrafts: [validTaskDraft()],
+      inputUuids: [],
+      description: "Spec Kit feature dir: specs/001-login",
+    });
+    mockPrisma.proposal.findFirst.mockResolvedValue(proposal);
+
+    const result = await validateProposal(COMPANY_UUID, proposal.uuid);
+    const e4 = result.issues.find((i) => i.id === "E4");
+    expect(e4).toBeUndefined();
+  });
+
   it("E5: should error when input idea has unresolved elaboration", async () => {
     const proposal = dbProposal({
       inputType: "idea",

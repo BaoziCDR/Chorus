@@ -906,8 +906,8 @@ model Task {
 - `companyUuid`: 所属公司 UUID
 - `projectUuid`: 所属项目 UUID
 - **输入**：
-  - `inputType`: `idea` | `document`
-  - `inputUuids`: 关联的输入 UUID 列表（JSON 数组，支持多个 Ideas 组合）
+  - `inputType`: `idea` | `document` | `speckit`
+  - `inputUuids`: 关联的输入 UUID 列表（JSON 数组，支持多个 Ideas 组合；`speckit` 等原生适配器可把来源信息保存在 Proposal 描述中）
 - **输出**：
   - `outputType`: `document` | `task`
   - `outputData`: 提议的内容（Document 草稿或 Task 列表）
@@ -1025,7 +1025,9 @@ model Task {
 | **Proposals** |
 | GET | /api/projects/:uuid/proposals | 项目提议列表 | User, PM Agent |
 | POST | /api/projects/:uuid/proposals | 创建提议 | PM Agent |
+| POST | /api/projects/:uuid/spec-kit/import | 将 Spec Kit artifacts 导入为提议 | User, PM Agent |
 | GET | /api/proposals/:uuid | 提议详情 | User, PM Agent |
+| POST | /api/proposals/:uuid/spec-kit/generate | 从提议生成 Spec Kit artifacts | User, PM Agent |
 | POST | /api/proposals/:uuid/approve | 批准提议 | User |
 | POST | /api/proposals/:uuid/reject | 拒绝提议 | User |
 | **Knowledge** |
@@ -1101,7 +1103,7 @@ Header: Authorization: Bearer {api_key}
 | 必需权限 | 代表性工具 |
 |-----|-----|
 | `idea:write` | `chorus_claim_idea`、`chorus_release_idea`、`chorus_move_idea`、`chorus_pm_create_idea`、`chorus_pm_start_elaboration`、`chorus_pm_validate_elaboration`、`chorus_pm_skip_elaboration` |
-| `proposal:write` | `chorus_pm_create_proposal`、`chorus_pm_submit_proposal`、`chorus_pm_validate_proposal`、`chorus_pm_{add,update,remove}_document_draft`、`chorus_pm_{add,update,remove}_task_draft`、`chorus_pm_create_tasks`、`chorus_pm_assign_task`、`chorus_{add,remove}_task_dependency`、`chorus_pm_{reject,revoke}_proposal` |
+| `proposal:write` | `chorus_pm_create_proposal`、`chorus_pm_import_speckit_feature`、`chorus_pm_generate_speckit_feature`、`chorus_pm_submit_proposal`、`chorus_pm_validate_proposal`、`chorus_pm_{add,update,remove}_document_draft`、`chorus_pm_{add,update,remove}_task_draft`、`chorus_pm_create_tasks`、`chorus_pm_assign_task`、`chorus_{add,remove}_task_dependency`、`chorus_pm_{reject,revoke}_proposal` |
 | `document:write` | `chorus_pm_create_document`、`chorus_pm_update_document` |
 | `task:write` | `chorus_claim_task`、`chorus_release_task`、`chorus_submit_for_verify`、`chorus_report_work`、`chorus_report_criteria_self_check` |
 | `project:write` | `chorus_admin_create_project`、`chorus_admin_{create,update,delete}_project_group`、`chorus_admin_move_project_to_group` |
@@ -1121,6 +1123,8 @@ Header: Authorization: Bearer {api_key}
 | Ideas → PRD | `idea` | Idea UUIDs（支持多个） | `document` | PRD 草稿 |
 | PRD → Tasks | `document` | Document UUID | `task` | Task 列表 |
 | PRD → Tech Design | `document` | Document UUID | `document` | 技术设计草稿 |
+| Spec Kit → Proposal | `speckit` | 空；源路径写入 Proposal 描述 | `document` + `task` 草稿 | 镜像文档与任务草稿 |
+| Proposal → Spec Kit | `idea` 或 `document` | 原始输入 UUID | Repo 文件 | `spec.md`、`plan.md`、`tasks.md`；源路径写入 Proposal 描述 |
 
 ---
 

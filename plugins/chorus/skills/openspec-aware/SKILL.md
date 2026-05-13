@@ -1,6 +1,6 @@
 ---
 name: openspec-aware
-description: Opt-in OpenSpec-mode authoring for Chorus PM workflows in Codex. Detects the local `openspec` CLI, scaffolds `openspec/changes/<slug>/` on disk, and mirrors Markdown files into Chorus document drafts via the `chorus-mcp-call.sh` wrapper. Required reading for the proposal, develop, and yolo skills whenever the user has the `openspec` CLI installed.
+description: Legacy opt-in OpenSpec-mode authoring for Chorus PM workflows in Codex. Use only when the user explicitly asks for OpenSpec or an existing proposal carries OpenSpec provenance. The normal planning path is Chorus-first Spec Kit.
 license: AGPL-3.0
 metadata:
   author: chorus
@@ -11,7 +11,7 @@ metadata:
 
 # OpenSpec-aware Authoring (Codex plugin)
 
-This skill is a **shared sub-procedure** invoked by the Chorus stage skills (proposal, develop, yolo) whenever the user wants spec-driven authoring through the [OpenSpec CLI](https://github.com/Fission-AI/OpenSpec). It is opt-in:
+This skill is a **legacy shared sub-procedure** invoked by the Chorus stage skills only when the user explicitly wants spec-driven authoring through the [OpenSpec CLI](https://github.com/Fission-AI/OpenSpec), or when an existing proposal already carries OpenSpec provenance. It is opt-in:
 
 - Activates when **all three** signals hold (see §1): `CHORUS_OPENSPEC_MODE` is not `off`, an `openspec/` directory exists at the project root, and the `openspec` CLI is on `PATH`.
 - Otherwise the calling skill falls back to its existing free-form behavior.

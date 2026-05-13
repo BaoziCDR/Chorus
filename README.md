@@ -334,6 +334,19 @@ changes ship in 0.8.0; the canonical skill reuses the existing
 `chorus_pm_*` draft and document tools. See
 [OPENSPEC_MODE.md](docs/OPENSPEC_MODE.md) for the full guide.
 
+### Spec Kit mode (native import/generate)
+
+Chorus can natively work with Spec Kit artifacts in both directions.
+It can import an existing `specs/<feature>/` directory through REST or
+`chorus_pm_import_speckit_feature`, and it can generate `spec.md`, `plan.md`,
+and `tasks.md` from an existing Chorus Proposal through
+`chorus_pm_generate_speckit_feature`. Chorus stores the Spec Kit feature
+directory as proposal provenance and stamps `T001`-style task ids into task
+drafts, so verifying a Spec Kit-backed task can patch the matching `tasks.md`.
+By default Chorus writes local files under its process working directory; a
+GitHub adapter is available when remote repo writes are preferred.
+See [SPECKIT_MODE.md](docs/SPECKIT_MODE.md) for the full guide.
+
 ---
 
 ## Documentation
@@ -345,6 +358,7 @@ changes ship in 0.8.0; the canonical skill reuses the existing
 | [MCP Tools](docs/MCP_TOOLS.md) | MCP Tools Reference |
 | [Chorus Plugin](docs/chorus-plugin.md) | Plugin Design & Hook Documentation |
 | [OpenSpec Mode](docs/OPENSPEC_MODE.md) | Opt-in OpenSpec authoring mode for PM agents (0.8.0+) |
+| [Spec Kit Mode](docs/SPECKIT_MODE.md) | Native Spec Kit import, generation, and checkbox sync |
 | [Search](docs/SEARCH.md) | Global Search Technical Design |
 | [AI-DLC Gap Analysis](docs/AIDLC_GAP_ANALYSIS.md) | AI-DLC Methodology Gap Analysis |
 | [AIG Implementation Plan](docs/CHORUS_AIG_PLAN.md) | Agent transparency roadmap |

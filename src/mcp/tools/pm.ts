@@ -13,6 +13,8 @@ import * as documentService from "@/services/document.service";
 import * as taskService from "@/services/task.service";
 import * as activityService from "@/services/activity.service";
 import * as elaborationService from "@/services/elaboration.service";
+import * as specKitService from "@/services/spec-kit.service";
+import * as specKitGenerateService from "@/services/spec-kit-generate.service";
 import { getAgentByUuid } from "@/services/agent.service";
 import { AlreadyClaimedError, NotClaimedError } from "@/lib/errors";
 import { zArray } from "./schema-utils";
@@ -183,6 +185,117 @@ export function registerPmTools(server: McpServer, auth: AgentAuthContext) {
       return {
         content: [{ type: "text", text: JSON.stringify({ uuid: proposal.uuid, title: proposal.title, status: proposal.status }, null, 2) + reusedWarning }],
       };
+    }
+  );
+
+  // chorus_pm_import_speckit_feature - Native Spec Kit artifact import
+  registerPermissionedTool(
+    server,
+    auth,
+    "proposal:write",
+    "chorus_pm_import_speckit_feature",
+    {
+      description: "Import a Spec Kit feature into Chorus natively. Chorus parses tasks.md server-side, creates a draft Proposal with Spec Kit document drafts, and converts Spec Kit tasks into Chorus task drafts with dependencies.",
+      inputSchema: z.object({
+        projectUuid: z.string().describe("Project UUID"),
+        title: z.string().describe("Proposal title"),
+        description: z.string().optional().describe("Proposal description"),
+        featureDir: z.string().describe("Spec Kit feature directory, for example specs/001-auth"),
+        documents: z.object({
+          specMd: z.string().optional().describe("Contents of specs/<feature>/spec.md"),
+          planMd: z.string().optional().describe("Contents of specs/<feature>/plan.md"),
+          researchMd: z.string().optional().describe("Contents of specs/<feature>/research.md"),
+          dataModelMd: z.string().optional().describe("Contents of specs/<feature>/data-model.md"),
+          quickstartMd: z.string().optional().describe("Contents of specs/<feature>/quickstart.md"),
+          contracts: zArray(z.object({
+            path: z.string().describe("Contract path relative to the feature directory"),
+            content: z.string().describe("Contract file content"),
+            title: z.string().optional().describe("Optional Chorus document title"),
+          })).optional().describe("Contents of specs/<feature>/contracts/*"),
+        }).describe("Spec Kit markdown artifacts to mirror into Chorus document drafts"),
+        tasksMarkdown: z.string().describe("Contents of specs/<feature>/tasks.md"),
+      }),
+    },
+    async ({ projectUuid, title, description, featureDir, documents, tasksMarkdown }) => {
+      if (!(await projectExists(auth.companyUuid, projectUuid))) {
+        return { content: [{ type: "text", text: "Project not found" }], isError: true };
+      }
+
+      try {
+        const result = await specKitService.importSpecKitFeature({
+          companyUuid: auth.companyUuid,
+          projectUuid,
+          title,
+          description,
+          featureDir,
+          documents,
+          tasksMarkdown,
+          createdByUuid: auth.actorUuid,
+          createdByType: "agent",
+        });
+
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              proposalUuid: result.proposal.uuid,
+              status: result.proposal.status,
+              featureDir: result.featureDir,
+              documentDraftCount: result.documentDraftCount,
+              taskDraftCount: result.taskDraftCount,
+              warnings: result.warnings,
+            }, null, 2),
+          }],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: "text", text: `Failed to import Spec Kit feature: ${error instanceof Error ? error.message : "Unknown error"}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // chorus_pm_generate_speckit_feature - Generate native Spec Kit artifacts from a Chorus Proposal
+  registerPermissionedTool(
+    server,
+    auth,
+    "proposal:write",
+    "chorus_pm_generate_speckit_feature",
+    {
+      description: "Generate Spec Kit files from an existing Chorus Proposal and write them through the repo adapter. Also stamps Spec Kit task ids into the Proposal task drafts so later task verification can update tasks.md checkboxes.",
+      inputSchema: z.object({
+        proposalUuid: z.string().describe("Proposal UUID"),
+        featureDir: z.string().optional().describe("Optional Spec Kit feature directory, for example specs/001-auth. Defaults to specs/chorus-<proposal>-<title>."),
+      }),
+    },
+    async ({ proposalUuid, featureDir }) => {
+      try {
+        const result = await specKitGenerateService.generateSpecKitFeatureFromProposal({
+          companyUuid: auth.companyUuid,
+          proposalUuid,
+          featureDir,
+          actorType: "agent",
+          actorUuid: auth.actorUuid,
+        });
+
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              proposalUuid: result.proposalUuid,
+              featureDir: result.featureDir,
+              files: result.files,
+              taskIdByDraftUuid: result.taskIdByDraftUuid,
+            }, null, 2),
+          }],
+        };
+      } catch (error) {
+        return {
+          content: [{ type: "text", text: `Failed to generate Spec Kit feature: ${error instanceof Error ? error.message : "Unknown error"}` }],
+          isError: true,
+        };
+      }
     }
   );
 

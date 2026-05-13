@@ -277,7 +277,7 @@ model Proposal {
   description     String?
 
   // Input source (what the Proposal is based on)
-  inputType       String    // idea | document
+  inputType       String    // idea | document | speckit
   inputUuids      Json      // Array of UUID strings
 
   // Container contents (can include both documents and tasks)

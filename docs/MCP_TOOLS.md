@@ -34,6 +34,8 @@ The following table summarizes every permission-gated MCP tool. Each tool has ex
 | `chorus_pm_validate_elaboration` | `idea:write` |
 | `chorus_pm_skip_elaboration` | `idea:write` |
 | `chorus_pm_create_proposal` | `proposal:write` |
+| `chorus_pm_import_speckit_feature` | `proposal:write` |
+| `chorus_pm_generate_speckit_feature` | `proposal:write` |
 | `chorus_pm_validate_proposal` | `proposal:write` |
 | `chorus_pm_submit_proposal` | `proposal:write` |
 | `chorus_pm_add_document_draft` | `proposal:write` |
@@ -879,6 +881,67 @@ Available to PM Agent and Admin Agent. Not available to Developer Agent.
 | taskDrafts | array | No | List of task drafts |
 
 **Output**: Created Proposal JSON
+
+### chorus_pm_import_speckit_feature
+
+**Description**: Import Spec Kit artifacts into Chorus natively. Chorus parses `tasks.md` server-side, creates a draft Proposal with Spec Kit document drafts, and converts tasks into Chorus task drafts with dependencies.
+
+**Required Permission**: `proposal:write`
+
+**Input**:
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| projectUuid | string | Yes | Project UUID |
+| title | string | Yes | Proposal title |
+| description | string | No | Proposal description |
+| featureDir | string | Yes | Spec Kit feature directory, for example `specs/001-auth` |
+| documents.specMd | string | No | Contents of `spec.md` |
+| documents.planMd | string | No | Contents of `plan.md` |
+| documents.researchMd | string | No | Contents of `research.md` |
+| documents.dataModelMd | string | No | Contents of `data-model.md` |
+| documents.quickstartMd | string | No | Contents of `quickstart.md` |
+| documents.contracts | array | No | Contract files `{ path, content, title? }` |
+| tasksMarkdown | string | Yes | Contents of `tasks.md` |
+
+**Output**:
+```json
+{
+  "proposalUuid": "proposal-uuid",
+  "status": "draft",
+  "featureDir": "specs/001-auth",
+  "documentDraftCount": 2,
+  "taskDraftCount": 12,
+  "warnings": []
+}
+```
+
+### chorus_pm_generate_speckit_feature
+
+**Description**: Generate Spec Kit files from an existing Chorus Proposal. Chorus writes `spec.md`, `plan.md`, and `tasks.md` through the repo adapter, records `Spec Kit feature dir: ...` on the Proposal, and stamps `T001`-style task ids into task drafts so later verification can update `tasks.md` checkboxes.
+
+**Required Permission**: `proposal:write`
+
+**Input**:
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| proposalUuid | string | Yes | Proposal UUID |
+| featureDir | string | No | Spec Kit feature directory, for example `specs/001-auth`. Defaults to `specs/chorus-<proposal>-<title>` |
+
+**Output**:
+```json
+{
+  "proposalUuid": "proposal-uuid",
+  "featureDir": "specs/001-auth",
+  "files": [
+    { "path": "specs/001-auth/spec.md", "status": "created" },
+    { "path": "specs/001-auth/plan.md", "status": "created" },
+    { "path": "specs/001-auth/tasks.md", "status": "created" }
+  ],
+  "taskIdByDraftUuid": {
+    "draft-uuid": "T001"
+  }
+}
+```
 
 ### chorus_pm_validate_proposal
 

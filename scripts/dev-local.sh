@@ -55,7 +55,10 @@ fi
 
 echo "PGlite ready on port ${PGLITE_PORT}"
 
-# 3. Apply schema
+# 3. Generate Prisma client and apply schema
+echo "Generating Prisma client..."
+DATABASE_URL="${DATABASE_URL}" npx prisma generate 2>&1
+
 echo "Applying database schema..."
 DATABASE_URL="${DATABASE_URL}" npx prisma db push 2>&1
 

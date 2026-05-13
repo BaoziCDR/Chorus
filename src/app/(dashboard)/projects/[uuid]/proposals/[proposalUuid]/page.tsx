@@ -63,6 +63,7 @@ const statusI18nKeys: Record<string, string> = {
 const inputTypeI18nKeys: Record<string, { key: string }> = {
   idea: { key: "ideas.title" },
   document: { key: "documents.title" },
+  speckit: { key: "proposals.specKit" },
 };
 
 interface PageProps {

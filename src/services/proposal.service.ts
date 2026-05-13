@@ -220,8 +220,9 @@ export async function validateProposal(
     });
   }
 
-  // E4: inputUuids must be non-empty
-  if (inputUuids.length === 0) {
+  // E4: inputUuids must be non-empty unless the source is a native adapter
+  // whose provenance lives in the proposal description.
+  if (proposal.inputType !== "speckit" && inputUuids.length === 0) {
     issues.push({
       id: "E4",
       level: "error",

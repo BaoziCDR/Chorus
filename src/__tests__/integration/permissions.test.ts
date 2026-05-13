@@ -10,7 +10,8 @@
 //     The consensus captured in T3's comment thread (2026-04-30) is "+10": the 5
 //     project/ProjectGroup admin tools gated on project:write PLUS the 5 developer
 //     task-execution tools gated on task:write (handlers still enforce isAssignee
-//     at runtime, so pm visibility doesn't equal operational escalation).
+//     at runtime, so pm visibility doesn't equal operational escalation). New
+//     proposal:write-native tools are listed separately beside that baseline.
 //   Scenario 4 — a super_admin auth context bypasses REST permission gates.
 //
 // Scenarios explicitly out of scope here:
@@ -114,6 +115,8 @@ vi.mock("@/services/task.service", () => ({
 // because registration never reaches any handler body.
 vi.mock("@/services/session.service", () => ({}));
 vi.mock("@/services/document.service", () => ({}));
+vi.mock("@/services/spec-kit.service", () => ({}));
+vi.mock("@/services/spec-kit-generate.service", () => ({}));
 vi.mock("@/services/comment.service", () => ({}));
 vi.mock("@/services/assignment.service", () => ({}));
 vi.mock("@/services/notification.service", () => ({}));
@@ -265,6 +268,11 @@ const PM_AGENT_ADDED_IN_0_7_0 = [
   "chorus_report_work",
 ];
 
+const PM_AGENT_ADDED_NATIVE_SPEC_KIT = [
+  "chorus_pm_import_speckit_feature",
+  "chorus_pm_generate_speckit_feature",
+];
+
 // ===== Shared beforeEach =====
 
 beforeEach(() => {
@@ -346,6 +354,8 @@ describe("Scenario 1: custom permissions agent end-to-end (AC1)", () => {
     for (const forbidden of [
       "chorus_pm_create_idea",
       "chorus_pm_create_proposal",
+      "chorus_pm_import_speckit_feature",
+      "chorus_pm_generate_speckit_feature",
       "chorus_admin_create_project",
       "chorus_admin_approve_proposal",
       "chorus_admin_verify_task",
@@ -430,6 +440,7 @@ describe("Scenario 2: preset parity with 0.6.x baseline (AC2)", () => {
     const expected = new Set([
       ...OLD_ADMIN_TOOLS,
       ...OLD_PM_TOOLS,
+      ...PM_AGENT_ADDED_NATIVE_SPEC_KIT,
       ...OLD_DEVELOPER_TOOLS,
     ]);
     expect(tools).toEqual(expected);
@@ -449,12 +460,12 @@ describe("Scenario 2: preset parity with 0.6.x baseline (AC2)", () => {
     }
   });
 
-  it("pm_agent diff vs 0.6.x pm baseline is exactly the 10 expected tools (5 project + 5 developer)", () => {
+  it("pm_agent diff vs 0.6.x pm baseline is exactly the expected added tools", () => {
     const auth = makeAgentAuth([...ROLE_PRESETS.pm_agent], ["pm_agent"]);
     const tools = enumerateGatedMcpTools(auth);
     const baseline = new Set(OLD_PM_TOOLS);
     const diff = Array.from(tools).filter((t) => !baseline.has(t)).sort();
-    expect(diff).toEqual([...PM_AGENT_ADDED_IN_0_7_0].sort());
+    expect(diff).toEqual([...PM_AGENT_ADDED_IN_0_7_0, ...PM_AGENT_ADDED_NATIVE_SPEC_KIT].sort());
   });
 
   it("pm_agent preset does not leak any *:admin-gated tool", () => {

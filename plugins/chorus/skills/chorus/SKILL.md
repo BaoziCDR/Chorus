@@ -284,7 +284,7 @@ The table below shows default tool availability for each preset (no custom permi
 | `chorus_update_task` (field edits + status) | (public; assignee required for status) | Yes | Yes | Yes |
 | `chorus_claim_task` / `chorus_release_task` / `chorus_submit_for_verify` / `chorus_report_work` / `chorus_report_criteria_self_check` | `task:write` | Yes | **Yes** (0.7.0+) | Yes |
 | `chorus_claim_idea` / `chorus_release_idea` / `chorus_move_idea` / `chorus_pm_create_idea` / `chorus_pm_*_elaboration` | `idea:write` | No | Yes | Yes |
-| `chorus_pm_create_proposal` / `chorus_pm_*_proposal` / `chorus_pm_*_draft` / `chorus_pm_create_tasks` / `chorus_pm_assign_task` / `chorus_*_task_dependency` | `proposal:write` | No | Yes | Yes |
+| `chorus_pm_create_proposal` / `chorus_pm_import_speckit_feature` / `chorus_pm_generate_speckit_feature` / `chorus_pm_*_proposal` / `chorus_pm_*_draft` / `chorus_pm_create_tasks` / `chorus_pm_assign_task` / `chorus_*_task_dependency` | `proposal:write` | No | Yes | Yes |
 | `chorus_pm_create_document` / `chorus_pm_update_document` | `document:write` | No | Yes | Yes |
 | `chorus_admin_create_project` / `chorus_admin_*_project_group` / `chorus_admin_move_project_to_group` | `project:write` | No | **Yes** (0.7.0+) | Yes |
 | `chorus_admin_approve_proposal` / `chorus_admin_close_proposal` | `proposal:admin` | No | No | Yes |
@@ -363,7 +363,7 @@ This is the core overview skill. For stage-specific workflows, use:
 | **Planning** | `/proposal` | Create Proposals with document & task drafts, manage dependency DAG, submit for review |
 | **Development** | `/develop` | Claim Tasks, report work, (optional) session management, sub-agent spawn patterns |
 | **Review** | `/review` | Approve/reject Proposals, verify Tasks, project governance |
-| **OpenSpec mode** | `openspec-aware` | Opt-in **shared sub-procedure** invoked by `proposal`, `develop`, and `yolo` whenever the user has the `openspec` CLI installed. Scaffolds `openspec/changes/<slug>/` on disk and mirrors files into Chorus document drafts via the `chorus-mcp-call.sh` wrapper. Skips silently in fallback mode. See `~/.codex/skills/openspec-aware/SKILL.md`. |
+| **OpenSpec mode** | `openspec-aware` | Legacy opt-in path. Load it only when the user explicitly asks for OpenSpec or an existing proposal carries `OpenSpec change slug: <slug>` provenance. The normal planning path is Chorus-first Spec Kit via `chorus_pm_generate_speckit_feature`. |
 
 ### Getting Started
 

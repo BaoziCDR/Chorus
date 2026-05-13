@@ -28,6 +28,8 @@ export const TOOL_PERMISSIONS = {
   chorus_pm_skip_elaboration: "idea:write",
   // Proposal writes
   chorus_pm_create_proposal: "proposal:write",
+  chorus_pm_import_speckit_feature: "proposal:write",
+  chorus_pm_generate_speckit_feature: "proposal:write",
   chorus_pm_validate_proposal: "proposal:write",
   chorus_pm_submit_proposal: "proposal:write",
   chorus_pm_add_document_draft: "proposal:write",

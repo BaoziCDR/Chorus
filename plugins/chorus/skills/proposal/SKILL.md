@@ -32,6 +32,8 @@ Elaboration resolved --> Create Proposal --> Add drafts --> Validate --> Submit 
 | Tool | Purpose |
 |------|---------|
 | `chorus_pm_create_proposal` | Create empty proposal container |
+| `chorus_pm_import_speckit_feature` | Import Spec Kit artifacts as a proposal with document/task drafts |
+| `chorus_pm_generate_speckit_feature` | Generate Spec Kit artifacts from a proposal and write them to the configured repo |
 | `chorus_pm_validate_proposal` | Validate proposal completeness (returns errors, warnings, info) |
 | `chorus_pm_submit_proposal` | Submit proposal for Admin approval (draft -> pending) |
 
@@ -84,15 +86,38 @@ chorus_pm_create_proposal({
 
 **Multiple Ideas:** You can combine multiple ideas into one proposal by passing multiple UUIDs in `inputUuids`.
 
-### Step 1.5: Detect OpenSpec mode
+### Step 1.4: Import Spec Kit Artifacts
 
-Before authoring document drafts, **load the `openspec-aware` skill at `~/.codex/skills/openspec-aware/SKILL.md`** and run its §1 detection contract. Branch on the result:
+If the user already has a Spec Kit feature directory (`specs/<feature>/spec.md`, `plan.md`, and `tasks.md`), use the native importer instead of manually creating drafts:
 
-- **`CHORUS_OPENSPEC_ACTIVE=1`** → follow `openspec-aware` §3. Pick `$SLUG`, scaffold `openspec/changes/<slug>/`, author `proposal.md` / `design.md` / `specs/<capability>/spec.md` locally, then create the proposal container (Step 1 above) with the literal line `OpenSpec change slug: <slug>` in `description`, and mirror each local file into a document draft.
+```
+chorus_pm_import_speckit_feature({
+  projectUuid: "<project-uuid>",
+  title: "<feature name>",
+  description: "<short summary>",
+  featureDir: "specs/<feature>",
+  documents: {
+    specMd: "<contents of spec.md>",
+    planMd: "<contents of plan.md>"
+  },
+  tasksMarkdown: "<contents of tasks.md>"
+})
+```
 
-  > **⛔ Mandatory in OpenSpec mode:** mirror calls go through the `chorus-mcp-call.sh` wrapper with `content` produced by `json_encode_file` — see `openspec-aware` §3.6. Do **not** call `chorus_pm_add_document_draft` directly from Codex's MCP harness with a hand-typed `content` field. Re-typing thousands of lines through the model burns 20k+ content tokens per proposal and breaks byte-equality with the local source of truth (`openspec-aware` §2 Rule 1 explains the full reasoning). Skip Step 2 below when in OpenSpec mode — the wrapper-based flow in `openspec-aware` §3.6 replaces it for documents.
+Chorus parses `tasks.md` server-side and creates the task DAG. Then continue with validation and submit.
 
-- **`CHORUS_OPENSPEC_ACTIVE=0`** (CLI absent or `CHORUS_OPENSPEC_MODE=off`) → proceed with Step 2 unchanged. Author drafts inline as free-form Markdown via direct MCP `chorus_pm_add_document_draft`.
+### Step 1.5: Choose the Spec Kit Path
+
+For new PM work, the default path is **Chorus-first Spec Kit**:
+
+1. Create the proposal container.
+2. Add document drafts and task drafts in Chorus.
+3. Generate `spec.md`, `plan.md`, and `tasks.md` through `chorus_pm_generate_speckit_feature` in Step 4.5.
+4. Validate and submit the proposal.
+
+If the user already has a Spec Kit feature directory, use Step 1.4 import instead of recreating drafts manually. After import, continue with validation and submit.
+
+Do **not** load `openspec-aware`, check `CHORUS_OPENSPEC_ACTIVE`, or scaffold `openspec/changes/` during the normal proposal flow. OpenSpec is a legacy opt-in path; use it only when the user explicitly asks for OpenSpec or the current proposal already carries `OpenSpec change slug: <slug>` provenance.
 
 ### Step 2: Add Document Drafts
 
@@ -174,6 +199,21 @@ chorus_pm_remove_task_draft({
   draftUuid: "<draft-uuid>"
 })
 ```
+
+### Step 4.5: Generate Spec Kit Artifacts
+
+For new proposals, generate Spec Kit files after document/task drafts are ready and before validation:
+
+```
+chorus_pm_generate_speckit_feature({
+  proposalUuid: "<proposal-uuid>",
+  featureDir: "specs/<feature>"
+})
+```
+
+`featureDir` is optional. The tool writes `spec.md`, `plan.md`, and `tasks.md` to the repo adapter target and stamps `T001`-style task ids into Chorus task drafts so later verification can update `tasks.md` checkboxes.
+
+Skip this step only when the user explicitly says not to create Spec Kit files, or when Step 1.4 already imported an existing Spec Kit feature directory. Spec Kit files are planning artifacts; do not edit implementation code while acting as a PM Agent.
 
 ### Step 5: Validate and Submit
 
